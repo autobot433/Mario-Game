@@ -1,0 +1,124 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Bros. Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #87CEEB; /* Sky blue background */
+}
+
+#gameCanvas {
+    background-color: #5c94fc;
+    border: 2px solid #000;
+}
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 800; // Width of the canvas
+canvas.height = 400; // Height of the canvas
+
+// Game variables
+const gravity = 0.5;
+let gameSpeed = 3;
+class Mario {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 60;
+        this.dy = 0; // Vertical velocity
+        this.jumping = false;
+        this.image = new Image();
+        this.image.src = "assets/mario.png"; // Mario sprite image
+    }
+
+    draw() {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+    }
+
+    jump() {
+        if (!this.jumping) {
+            this.dy = -10; // Jump force
+            this.jumping = true;
+        }
+    }
+
+    update() {
+        this.y += this.dy;
+        this.dy += gravity;
+
+        // Floor collision
+        if (this.y + this.height > canvas.height - 50) {
+            this.y = canvas.height - 50 - this.height;
+            this.dy = 0;
+            this.jumping = false;
+        }
+        this.draw();
+    }
+}
+
+let mario = new Mario(100, canvas.height - 110);
+class Platform {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+
+    draw() {
+        ctx.fillStyle = "#8B4513";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+let platforms = [
+    new Platform(50, canvas.height - 50, 200, 10),
+    new Platform(400, canvas.height - 100, 150, 10),
+    new Platform(700, canvas.height - 150, 100, 10),
+];
+function isColliding(mario, platform) {
+    return (
+        mario.x < platform.x + platform.width &&
+        mario.x + mario.width > platform.x &&
+        mario.y < platform.y + platform.height &&
+        mario.y + mario.height > platform.y
+    );
+}
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") {
+        mario.jump();
+    }
+});
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Mario
+    mario.update();
+
+    // Draw platforms
+    platforms.forEach((platform) => {
+        platform.draw();
+        if (isColliding(mario, platform)) {
+            mario.jumping = false;
+            mario.y = platform.y - mario.height;
+            mario.dy = 0;
+        }
+    });
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
